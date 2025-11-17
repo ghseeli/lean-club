@@ -20,7 +20,7 @@ The Pfaffian of an alternating matrix
 
 -/
 universe u
-variable {α : Type u}
+variable {α : Type u} [Fintype α] [DecidableEq α] [LT α]
 variable {R : Type u} [CommRing R]
 
 #check ∀ (x : α), true
@@ -28,8 +28,8 @@ def IsAlt {n : Finset α} (A : Matrix n n R) :=
   (∀ (i j : n), A j i = - (A i j)) ∧ (∀ (i : n), A i i = 0)
 
 -- Unclear if LT is the right thing
-structure PerfectMatching (n : Finset α) [LT n] where
-  edges : Finset (n × n)
+structure PerfectMatching (α : Type u) [Fintype α] [DecidableEq α] [LT α] where
+  edges : Finset (α × α)
   ordered : ∀ b ∈ edges, b.1 < b.2
   disjoint : ∀ b₁ ∈ edges, ∀ b₂ ∈ edges,
     --Disjoint {b₁.1, b₁.2} {b₂.1, b₂.2}
@@ -37,15 +37,9 @@ structure PerfectMatching (n : Finset α) [LT n] where
     b₁ ≠ b₂ -> b₁.1 ≠ b₂.1 ∧ b₁.1 ≠ b₂.2 ∧ b₁.2 ≠ b₂.1 ∧ b₁.2 ≠ b₂.2
 
   --union : ⋃ b ∈ edges, {b.1, b.2} = Set.univ := by decide
-  union : ∀ i ∈ n, ∃ b ∈ edges, (i = b.1 ∨ i = b.2)
+  union : ∀ (i : α), ∃ b ∈ edges, (i = b.1 ∨ i = b.2)
 
 -- The following are attempts at examples
-def ex0 : {x : Fin 4  // x ∈ Finset.univ} := ⟨0, by decide⟩
-def ex1 : {x : Fin 4  // x ∈ Finset.univ} := ⟨1, by decide⟩
-def ex2 : {x : Fin 4  // x ∈ Finset.univ} := ⟨2, by decide⟩
-def ex3 : {x : Fin 4  // x ∈ Finset.univ} := ⟨3, by decide⟩
-
-#eval (Finset.univ : Finset (Fin 4))
-def pm_ex : PerfectMatching (Finset.univ) (α := Fin 4) :=
-  ⟨{(ex0,ex1), (ex2,ex3)},
+def pm_ex : PerfectMatching (Fin 4) :=
+  ⟨{(0,1), (2,3)},
       by decide,by decide, by decide⟩
