@@ -40,12 +40,12 @@ structure PerfectMatching (n : Finset α) [LT n] where
   union : ∀ i ∈ n, ∃ b ∈ edges, (i = b.1 ∨ i = b.2)
 
 -- The following are attempts at examples
-def ex0 : Fin 4 := 0
-def ex1 : Fin 4 := 1
-def ex2 : Fin 4 := 2
-def ex3 : Fin 4 := 3
+def ex0 : {x : Fin 4  // x ∈ Finset.univ} := ⟨0, by decide⟩
+def ex1 : {x : Fin 4  // x ∈ Finset.univ} := ⟨1, by decide⟩
+def ex2 : {x : Fin 4  // x ∈ Finset.univ} := ⟨2, by decide⟩
+def ex3 : {x : Fin 4  // x ∈ Finset.univ} := ⟨3, by decide⟩
 
 #eval (Finset.univ : Finset (Fin 4))
-def pm_ex : PerfectMatching (Finset.univ : Finset (Fin 4)) :=
+def pm_ex : PerfectMatching (Finset.univ) (α := Fin 4) :=
   ⟨{(ex0,ex1), (ex2,ex3)},
       by decide,by decide, by decide⟩
