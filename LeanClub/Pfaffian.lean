@@ -23,7 +23,7 @@ universe u
 variable {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α]
 variable {R : Type u} [CommRing R]
 
-#check ∀ (x : α), true
+
 def IsAlt {n : Finset α} (A : Matrix n n R) :=
   (∀ (i j : n), A j i = - (A i j)) ∧ (∀ (i : n), A i i = 0)
 
@@ -57,92 +57,77 @@ open Finset
 def block {α} [Fintype α] [DecidableEq α] (b : α × α) : Finset α :=
   {b.1, b.2}
 
+
 lemma block_card_two
     (M : PerfectMatching α) {b : α × α} (hb : b ∈ M.edges) :
-    (block b).card = 2 :=
-by
+    (block b).card = 2 := by
+    have hne : b.1 ≠ b.2 := ne_of_lt (M.ordered b hb)
+    simp [block, hne]
+
+
+lemma blocks_cover (M : PerfectMatching α) :
+    (M.edges.biUnion block : Finset α) = Finset.univ := by
   classical
-  -- from b.1 < b.2 we get b.1 ≠ b.2
-  have hne : b.1 ≠ b.2 := ne_of_lt (M.ordered b hb)
-  -- card {b.1, b.2} = 2 if b.1 ≠ b.2
-  simp [block, hne]
+  ext i; constructor
+  · intro _; exact Finset.mem_univ _
+  · intro _
+    rcases M.union i with ⟨b, hb, hi⟩
+    refine Finset.mem_biUnion.mpr ?_
+    refine ⟨b, hb, ?_⟩
+    rcases hi with rfl | rfl <;> simp [block]
+
+
+lemma card_eq_sum_block_card (M : PerfectMatching α) :
+    Fintype.card α = ∑ b ∈ M.edges, (block b).card := by
+  classical
+  -- cardinality of the union of blocks as a sum
+  have hsum :
+      (M.edges.biUnion block : Finset α).card =
+        ∑ b ∈ M.edges, (block b).card :=
+    Finset.card_biUnion M.disjoint
+
+  calc
+    Fintype.card α
+        = (Finset.univ : Finset α).card := (Finset.card_univ (α := α)).symm
+    _ = (M.edges.biUnion block : Finset α).card := by
+          simp [blocks_cover M]
+    _ = ∑ b ∈ M.edges, (block b).card := hsum
+
+
+theorem PerfectMatching.card_eq_twice_card_edges (M : PerfectMatching α) :
+  Fintype.card α = 2 * M.edges.card := by
+  classical
+  have hsum2 : ∑ b ∈ M.edges, (block b).card = 2 * M.edges.card := by
+        -- rewrite each term as 2
+    have :
+      ∑ b ∈ M.edges, (block b).card = ∑ b ∈ M.edges, (2 : ℕ) :=
+      by refine Finset.sum_congr rfl ?_
+         intro b hb
+         apply block_card_two M hb
+        -- sum of a constant over a finite set
+    have hconst :
+      ∑ b ∈ M.edges, (2 : ℕ) = 2 * M.edges.card :=
+      by simp [mul_comm]
+
+    simpa [this] using hconst
+
+  rw [card_eq_sum_block_card M, hsum2]
+
 
 theorem PerfectMatching.card_even (M : PerfectMatching α) :
   Even (Fintype.card α) := by
     classical
-
-    -- The union of all blocks is all of α (perfect matching)
-    have hcover :
-        (M.edges.biUnion block : Finset α) = Finset.univ :=
-      by
-        ext i; constructor
-        · intro _
-          exact Finset.mem_univ _
-        · intro _
-          rcases M.union i with ⟨b, hb, hi⟩
-          refine Finset.mem_biUnion.mpr ?_
-          refine ⟨b, hb, ?_⟩
-          rcases hi with rfl | rfl <;> simp [block]
-
-    -- Now compute |α| as sum over blocks
-    have hcard :
-        Fintype.card α =
-          ∑ b ∈ M.edges, (block b).card :=
-      by
-        -- |α| = |univ| = |⋃ blocks|
-        have :
-            (Finset.univ : Finset α).card =
-              (M.edges.biUnion block).card :=
-          by simp [hcover.symm]
-        -- use card_biUnion with pairwise disjoint blocks
-        have hsum :
-            (M.edges.biUnion block).card =
-              ∑ b ∈ M.edges, (block b).card :=
-          by
-            refine Finset.card_biUnion ?_
-            intro b₁ hb₁ b₂ hb₂ hneq
-            exact M.disjoint b₁ hb₁ b₂ hb₂ hneq
-        -- combine
-        have h_univ :
-            (Finset.univ : Finset α).card = Fintype.card α :=
-          by simpa using
-            (Finset.card_univ : (Finset.univ : Finset α).card = Fintype.card α)
-        calc
-          Fintype.card α
-              = (Finset.univ : Finset α).card := h_univ.symm
-          _ = (M.edges.biUnion block).card := this
-          _ = ∑ b ∈ M.edges, (block b).card := hsum
-
-    -- Substitute each block.card = 2 and simplify
-    have hsum2 :
-        ∑ b ∈ M.edges, (block b).card = M.edges.card + M.edges.card :=
-      by
-        -- rewrite each term as 2
-        have :
-            ∑ b ∈ M.edges, (block b).card =
-              ∑ b ∈ M.edges, (2 : ℕ) :=
-          by
-            refine Finset.sum_congr rfl ?_
-            intro b hb
-            apply block_card_two M hb
-        -- sum of a constant over a finite set
-        have h1 :
-            ∑ b ∈ M.edges, (1 : ℕ) = M.edges.card :=
-          by
-            simpa using
-              (Finset.card_eq_sum_ones (s := M.edges)).symm
-        calc
-          ∑ b ∈ M.edges, (block b).card
-              = ∑ b ∈ M.edges, (2 : ℕ) := this
-          _ = ∑ b ∈ M.edges, ((1 : ℕ) + 1) := by simp
-          _ = (∑ b ∈ M.edges, (1 : ℕ)) +
-              (∑ b ∈ M.edges, (1 : ℕ)) := by rw [Finset.sum_add_distrib]
-          _ = M.edges.card + M.edges.card := by simp [h1]
-
-    -- So |α| = 2 * |edges|, hence even
     refine ⟨M.edges.card, ?_⟩
-    rw [hcard, hsum2]
+    rw [PerfectMatching.card_eq_twice_card_edges M]
+    simp [two_mul]
 
-example (M : PerfectMatching (Fin 4)) :
-    Even (Fintype.card (Fin 4)) :=
-  PerfectMatching.card_even M
+theorem even_card_of_exists_PerfectMatching
+    (h : ∃ _ : PerfectMatching α, True) :
+    Even (Fintype.card α) := by
+  rcases h with ⟨M, _⟩
+  exact PerfectMatching.card_even M
+
+example : Even (Fintype.card (Fin 4)) :=
+  even_card_of_exists_PerfectMatching ⟨pm_ex, by decide⟩
+
+#check PerfectMatching.card_even pm_ex
