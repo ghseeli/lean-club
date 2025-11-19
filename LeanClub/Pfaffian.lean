@@ -77,17 +77,13 @@ lemma blocks_cover (M : PerfectMatching α) :
 lemma card_eq_sum_block_card (M : PerfectMatching α) :
     Fintype.card α = ∑ b ∈ M.edges, (block b).card := by
   -- cardinality of the union of blocks as a sum
-  have hsum :
-      (M.edges.biUnion block : Finset α).card =
-        ∑ b ∈ M.edges, (block b).card :=
-    Finset.card_biUnion M.disjoint
-
   calc
     Fintype.card α
         = (Finset.univ : Finset α).card := (Finset.card_univ (α := α)).symm
     _ = (M.edges.biUnion block : Finset α).card := by
           simp [blocks_cover M]
-    _ = ∑ b ∈ M.edges, (block b).card := hsum
+    _ = ∑ b ∈ M.edges, (block b).card := Finset.card_biUnion M.disjoint
+
 
 
 theorem PerfectMatching.card_eq_twice_card_edges (M : PerfectMatching α) :
