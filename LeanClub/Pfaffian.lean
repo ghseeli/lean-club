@@ -23,7 +23,6 @@ universe u
 variable {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α]
 variable {R : Type u} [CommRing R]
 
-
 def IsAlt {n : Finset α} (A : Matrix n n R) :=
   (∀ (i j : n), A j i = - (A i j)) ∧ (∀ (i : n), A i i = 0)
 
