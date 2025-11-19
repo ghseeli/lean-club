@@ -23,9 +23,8 @@ universe u
 variable {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α]
 variable {R : Type u} [CommRing R]
 
-
-def IsAlt {n : Finset α} (A : Matrix n n R) :=
-  (∀ (i j : n), A j i = - (A i j)) ∧ (∀ (i : n), A i i = 0)
+def IsAlt (A : Matrix α α R) :=
+  (∀ i j, A j i = - (A i j)) ∧ (∀ i, A i i = 0)
 
 -- Unclear if LT is the right thing
 -- Switch LT to LinearOrder
@@ -40,7 +39,6 @@ structure PerfectMatching (α : Type u) [Fintype α] [DecidableEq α] [LinearOrd
 
   --union : ⋃ b ∈ edges, {b.1, b.2} = Set.univ := by decide
   union : ∀ (i : α), ∃ b ∈ edges, (i = b.1 ∨ i = b.2)
-
 
 -- The following are attempts at examples
 def pm_ex : PerfectMatching (Fin 4) :=
@@ -67,19 +65,17 @@ lemma block_card_two
 
 lemma blocks_cover (M : PerfectMatching α) :
     (M.edges.biUnion block : Finset α) = Finset.univ := by
-  classical
   ext i; constructor
   · intro _; exact Finset.mem_univ _
   · intro _
     rcases M.union i with ⟨b, hb, hi⟩
-    refine Finset.mem_biUnion.mpr ?_
+    apply Finset.mem_biUnion.mpr 
     refine ⟨b, hb, ?_⟩
     rcases hi with rfl | rfl <;> simp [block]
-
+    
 
 lemma card_eq_sum_block_card (M : PerfectMatching α) :
     Fintype.card α = ∑ b ∈ M.edges, (block b).card := by
-  classical
   -- cardinality of the union of blocks as a sum
   have hsum :
       (M.edges.biUnion block : Finset α).card =
@@ -96,7 +92,6 @@ lemma card_eq_sum_block_card (M : PerfectMatching α) :
 
 theorem PerfectMatching.card_eq_twice_card_edges (M : PerfectMatching α) :
   Fintype.card α = 2 * M.edges.card := by
-  classical
   have hsum2 : ∑ b ∈ M.edges, (block b).card = 2 * M.edges.card := by
         -- rewrite each term as 2
     have :
@@ -116,18 +111,17 @@ theorem PerfectMatching.card_eq_twice_card_edges (M : PerfectMatching α) :
 
 theorem PerfectMatching.card_even (M : PerfectMatching α) :
   Even (Fintype.card α) := by
-    classical
     refine ⟨M.edges.card, ?_⟩
     rw [PerfectMatching.card_eq_twice_card_edges M]
     simp [two_mul]
 
 theorem even_card_of_exists_PerfectMatching
-    (h : ∃ _ : PerfectMatching α, True) :
+    (h : Nonempty (PerfectMatching α)) :
     Even (Fintype.card α) := by
-  rcases h with ⟨M, _⟩
+  obtain ⟨M⟩ := h
   exact PerfectMatching.card_even M
 
 example : Even (Fintype.card (Fin 4)) :=
-  even_card_of_exists_PerfectMatching ⟨pm_ex, by decide⟩
+  even_card_of_exists_PerfectMatching (.intro pm_ex)
 
 #check PerfectMatching.card_even pm_ex
