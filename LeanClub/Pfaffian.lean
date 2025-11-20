@@ -23,6 +23,7 @@ universe u
 variable {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α]
 variable {R : Type u} [CommRing R]
 
+-- The alternatingness of a matrix.
 def IsAlt (A : Matrix α α R) :=
   (∀ i j, A j i = - (A i j)) ∧ (∀ i, A i i = 0)
 
@@ -50,7 +51,7 @@ def pm_ex : PerfectMatching (Fin 4) :=
 open scoped BigOperators
 open Finset
 
--- 1b) If a perfect matching on S exists, then |S|is even.
+-- 1b) If a perfect matching on S exists, then |S| is even.
 
 def block {α} [Fintype α] [DecidableEq α] (b : α × α) : Finset α :=
   {b.1, b.2}
@@ -113,3 +114,34 @@ example : Even (Fintype.card (Fin 4)) :=
   even_card_of_exists_PerfectMatching (.intro pm_ex)
 
 #check PerfectMatching.card_even pm_ex
+
+-- In a perfect matching, each element of α lies in EXACTLY
+-- one block.
+theorem PerfectMatching.unique_block (M : PerfectMatching α) :
+  ∀ (i : α), ∃! b ∈ M.edges, (i = b.1 ∨ i = b.2) := by
+    intro i
+    obtain ⟨b, hbedge, hbi⟩ := M.union i
+    use b
+    constructor
+    · exact ⟨hbedge, hbi⟩
+    intro y ⟨hyedge, hyi⟩
+    nth_rw 2 [← mem_singleton] at hbi
+    have hb : i ∈ ({b.1, b.2} : Finset α) := mem_insert.mpr hbi
+    nth_rw 2 [← mem_singleton] at hyi
+    have hy : i ∈ ({y.1, y.2} : Finset α) := mem_insert.mpr hyi
+    have hne : (({b.1, b.2} : Finset α) ∩ ({y.1, y.2} : Finset α) : Finset α).Nonempty := by
+      use i
+      rw [mem_inter]
+      exact ⟨hb, hy⟩
+    rw [← not_disjoint_iff_nonempty_inter] at hne
+    by_contra hneq
+    change (y ≠ b) at hneq
+    symm at hneq
+    have hdj : Disjoint {b.1, b.2} {y.1, y.2} := M.disjoint b hbedge y hyedge hneq
+    contradiction
+
+-- The following is TODO:
+-- The edge (block) of M containing a given element
+def PerfectMatching.block (M : PerfectMatching α) : α → α × α :=
+  fun i => Finset.choose (fun (b : α × α) => (b ∈ M.edges ∧ (i = b.1 ∨ i = b.2)))
+                         (α × α) (PerfectMatching.unique_block i)
