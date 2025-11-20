@@ -69,10 +69,10 @@ lemma blocks_cover (M : PerfectMatching α) :
   · intro _; exact Finset.mem_univ _
   · intro _
     rcases M.union i with ⟨b, hb, hi⟩
-    apply Finset.mem_biUnion.mpr 
+    apply Finset.mem_biUnion.mpr
     refine ⟨b, hb, ?_⟩
     rcases hi with rfl | rfl <;> simp [block]
-    
+
 
 lemma card_eq_sum_block_card (M : PerfectMatching α) :
     Fintype.card α = ∑ b ∈ M.edges, (block b).card := by
@@ -87,23 +87,15 @@ lemma card_eq_sum_block_card (M : PerfectMatching α) :
 
 
 theorem PerfectMatching.card_eq_twice_card_edges (M : PerfectMatching α) :
-  Fintype.card α = 2 * M.edges.card := by
-  have hsum2 : ∑ b ∈ M.edges, (block b).card = 2 * M.edges.card := by
-        -- rewrite each term as 2
-    have :
-      ∑ b ∈ M.edges, (block b).card = ∑ b ∈ M.edges, (2 : ℕ) :=
-      by refine Finset.sum_congr rfl ?_
-         intro b hb
-         apply block_card_two M hb
+  Fintype.card α = 2 * M.edges.card :=
+  calc Fintype.card α
+    _ = ∑ b ∈ M.edges, (block b).card := card_eq_sum_block_card M
+    _ = ∑ b ∈ M.edges, (2 : ℕ) := by
+        refine Finset.sum_congr rfl ?_
+        intro b hb
+        apply block_card_two M hb
         -- sum of a constant over a finite set
-    have hconst :
-      ∑ b ∈ M.edges, (2 : ℕ) = 2 * M.edges.card :=
-      by simp [mul_comm]
-
-    simpa [this] using hconst
-
-  rw [card_eq_sum_block_card M, hsum2]
-
+    _ = 2 * M.edges.card := by simp [mul_comm]
 
 theorem PerfectMatching.card_even (M : PerfectMatching α) :
   Even (Fintype.card α) := by
