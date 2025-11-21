@@ -46,6 +46,11 @@ def pm_ex : PerfectMatching (Fin 4) :=
   ⟨{(0,1), (2,3)},
       by decide,by decide, by decide⟩
 
+def pm_ex2 : PerfectMatching (Fin 8) :=
+  ⟨{(0,5), (1,3), (2,4), (6,7)},
+      by decide, by simp, by decide⟩
+/- "by decide" exceeds maximum recursion depth! -/
+
 #eval pm_ex.edges
 
 open scoped BigOperators
@@ -53,44 +58,44 @@ open Finset
 
 -- 1b) If a perfect matching on S exists, then |S| is even.
 
-def block {α} [Fintype α] [DecidableEq α] (b : α × α) : Finset α :=
+def set {α} [Fintype α] [DecidableEq α] (b : α × α) : Finset α :=
   {b.1, b.2}
 
 
 lemma block_card_two
     (M : PerfectMatching α) {b : α × α} (hb : b ∈ M.edges) :
-    (block b).card = 2 := by
+    (set b).card = 2 := by
     have hne : b.1 ≠ b.2 := ne_of_lt (M.ordered b hb)
-    simp [block, hne]
+    simp [_root_.set, hne]
 
 
 lemma blocks_cover (M : PerfectMatching α) :
-    (M.edges.biUnion block : Finset α) = Finset.univ := by
+    (M.edges.biUnion set : Finset α) = Finset.univ := by
   ext i; constructor
   · intro _; exact Finset.mem_univ _
   · intro _
     rcases M.union i with ⟨b, hb, hi⟩
     apply Finset.mem_biUnion.mpr
     refine ⟨b, hb, ?_⟩
-    rcases hi with rfl | rfl <;> simp [block]
+    rcases hi with rfl | rfl <;> simp [_root_.set]
 
 
 lemma card_eq_sum_block_card (M : PerfectMatching α) :
-    Fintype.card α = ∑ b ∈ M.edges, (block b).card := by
+    Fintype.card α = ∑ b ∈ M.edges, (set b).card := by
   -- cardinality of the union of blocks as a sum
   calc
     Fintype.card α
         = (Finset.univ : Finset α).card := (Finset.card_univ (α := α)).symm
-    _ = (M.edges.biUnion block : Finset α).card := by
+    _ = (M.edges.biUnion set : Finset α).card := by
           simp [blocks_cover M]
-    _ = ∑ b ∈ M.edges, (block b).card := Finset.card_biUnion M.disjoint
+    _ = ∑ b ∈ M.edges, (set b).card := Finset.card_biUnion M.disjoint
 
 
 
 theorem PerfectMatching.card_eq_twice_card_edges (M : PerfectMatching α) :
   Fintype.card α = 2 * M.edges.card :=
   calc Fintype.card α
-    _ = ∑ b ∈ M.edges, (block b).card := card_eq_sum_block_card M
+    _ = ∑ b ∈ M.edges, (set b).card := card_eq_sum_block_card M
     _ = ∑ b ∈ M.edges, (2 : ℕ) := by
         refine Finset.sum_congr rfl ?_
         intro b hb
@@ -118,21 +123,21 @@ example : Even (Fintype.card (Fin 4)) :=
 -- In a perfect matching, each element of α lies in EXACTLY
 -- one block.
 theorem PerfectMatching.unique_block (M : PerfectMatching α) :
-  ∀ (i : α), ∃! b ∈ M.edges, (i = b.1 ∨ i = b.2) := by
+  ∀ (i : α), ∃! b ∈ M.edges, i ∈ set b := by
     intro i
     obtain ⟨b, hbedge, hbi⟩ := M.union i
     use b
+    simp_rw [_root_.set]
     constructor
-    · exact ⟨hbedge, hbi⟩
+    · simp
+      exact ⟨hbedge, hbi⟩
     intro y ⟨hyedge, hyi⟩
     nth_rw 2 [← mem_singleton] at hbi
     have hb : i ∈ ({b.1, b.2} : Finset α) := mem_insert.mpr hbi
-    nth_rw 2 [← mem_singleton] at hyi
-    have hy : i ∈ ({y.1, y.2} : Finset α) := mem_insert.mpr hyi
     have hne : (({b.1, b.2} : Finset α) ∩ ({y.1, y.2} : Finset α) : Finset α).Nonempty := by
       use i
       rw [mem_inter]
-      exact ⟨hb, hy⟩
+      exact ⟨hb, hyi⟩
     rw [← not_disjoint_iff_nonempty_inter] at hne
     by_contra hneq
     change (y ≠ b) at hneq
@@ -140,8 +145,26 @@ theorem PerfectMatching.unique_block (M : PerfectMatching α) :
     have hdj : Disjoint {b.1, b.2} {y.1, y.2} := M.disjoint b hbedge y hyedge hneq
     contradiction
 
--- The following is TODO:
 -- The edge (block) of M containing a given element
 def PerfectMatching.block (M : PerfectMatching α) : α → α × α :=
-  fun i => Finset.choose (fun (b : α × α) => (b ∈ M.edges ∧ (i = b.1 ∨ i = b.2)))
-                         (α × α) (PerfectMatching.unique_block i)
+  fun i => Finset.choose (fun (b : α × α) => (i ∈ set b))
+                         (M.edges : Finset (α × α)) (PerfectMatching.unique_block M i)
+
+#eval PerfectMatching.block pm_ex 0
+#eval PerfectMatching.block pm_ex 1
+#eval PerfectMatching.block pm_ex 2
+#eval PerfectMatching.block pm_ex 3
+#eval PerfectMatching.block pm_ex2 1
+#eval PerfectMatching.block pm_ex2 3
+
+theorem PerfectMatching.block_spec (M : PerfectMatching α) (i : α) :
+  (PerfectMatching.block M i ∈ M.edges) ∧ (i ∈ set (PerfectMatching.block M i)) := by
+    apply choose_spec
+
+theorem PerfectMatching.block_uni (M : PerfectMatching α) (i : α) (b : α × α)
+  (hbe : b ∈ M.edges)
+  (hib : i ∈ set b) : b = PerfectMatching.block M i := by
+    have h2 : (b ∈ M.edges) ∧ (i ∈ set b) := ⟨hbe, hib⟩
+    apply (PerfectMatching.unique_block M i).unique
+    · exact h2
+    · exact (PerfectMatching.block_spec M i)
