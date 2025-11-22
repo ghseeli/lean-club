@@ -168,3 +168,28 @@ theorem PerfectMatching.block_uni (M : PerfectMatching α) (i : α) (b : α × �
     apply (PerfectMatching.unique_block M i).unique
     · exact h2
     · exact (PerfectMatching.block_spec M i)
+
+def first_or_second_if_not (pair : α × α) (i : α) := if pair.1 = i then pair.2 else pair.1
+
+#eval first_or_second_if_not (0, 2) 3
+#eval first_or_second_if_not (0, 2) 2
+#eval first_or_second_if_not (0, 2) 0
+
+
+-- The partner of a given element of α in M:
+def PerfectMatching.partner (M : PerfectMatching α) : α → α :=
+  fun i => first_or_second_if_not (M.block i) i
+
+#eval pm_ex2.partner 0
+#eval pm_ex2.partner 5
+#eval pm_ex2.partner 1
+#eval pm_ex2.partner 2
+
+theorem PerfectMatching.partner_block (M : PerfectMatching α) (i : α) :
+    set (M.block i) = {i, M.partner i} := by
+  ext i
+  sorry
+
+theorem PerfectMatching.partner_invol (M : PerfectMatching α) : M.partner ∘ M.partner = id := by
+  ext i
+  sorry
