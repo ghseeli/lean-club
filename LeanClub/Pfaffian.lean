@@ -147,6 +147,7 @@ theorem PerfectMatching.unique_block (M : PerfectMatching α) :
 
 -- The edge (block) of M containing a given element
 def PerfectMatching.block (M : PerfectMatching α) : α → α × α :=
+<<<<<<< HEAD
   fun i => Finset.choose (fun (b : α × α) => (i ∈ set b))
                          (M.edges : Finset (α × α)) (PerfectMatching.unique_block M i)
 
@@ -168,3 +169,13 @@ theorem PerfectMatching.block_uni (M : PerfectMatching α) (i : α) (b : α × �
     apply (PerfectMatching.unique_block M i).unique
     · exact h2
     · exact (PerfectMatching.block_spec M i)
+=======
+  fun i => Finset.choose (fun b : α × α => i = b.1 ∨ i = b.2)
+                         (M.edges) (PerfectMatching.unique_block M i)
+
+def pm_ex2 : PerfectMatching (Fin 6) :=
+  ⟨{(0,4), (2,3), (1,5)},
+      by decide,by decide, by decide⟩
+
+#eval PerfectMatching.block pm_ex2 (3: Fin 6)
+>>>>>>> 03eefb09f835bb1324584693132f8dea7b9e36d6
