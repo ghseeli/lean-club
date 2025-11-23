@@ -325,20 +325,12 @@ theorem cross_symm (a b : α × α) (ha : a.1 < a.2)
     obtain ⟨left_1, right⟩ := right
     simp_all only
     apply And.intro
-    · intro a
-      subst a
-      simp_all only [not_true_eq_false]
+    · intro h; symm at h; apply left; exact h
     · apply And.intro
-      · intro a
-        subst a
-        simp_all only [not_true_eq_false]
+      · intro h; symm at h; apply left_1; exact h
       · apply And.intro
-        · intro a
-          subst a
-          simp_all only [not_true_eq_false]
-        · intro a
-          subst a
-          simp_all only [not_true_eq_false]
+        · intro h; symm at h; apply right_1; exact h
+        · intro h; symm at h; apply right; exact h
   have h11 : a.1 < b.1 ∨ b.1 < a.1 := by
     apply lt_or_gt_of_ne (hdj2.1)
   have h12 : a.1 < b.2 ∨ b.2 < a.1 := by
@@ -348,4 +340,10 @@ theorem cross_symm (a b : α × α) (ha : a.1 < a.2)
   have h22 : a.2 < b.2 ∨ b.2 < a.2 := by
     apply lt_or_gt_of_ne (hdj2.2.2.2)
   unfold cross
-  cases h11 <;> cases h12 <;> cases h21 <;> cases h22 <;> rename_i h h_1 h_2 h_3 <;> simp [h, h_1, h_2, h_3, not_lt_of_gt h, not_lt_of_gt h_1, not_lt_of_gt h_2, not_lt_of_gt h_3] <;> order
+  obtain h11 | h11 := h11 <;>
+    obtain h12 | h12 := h12 <;>
+      obtain h21 | h21 := h21 <;>
+        obtain h22 | h22 := h22 <;>
+          simp [h11, h12, h21, h22, not_lt_of_gt h11,
+            not_lt_of_gt h12, not_lt_of_gt h21, not_lt_of_gt h22]
+              <;> order
