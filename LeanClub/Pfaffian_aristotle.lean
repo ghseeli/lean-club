@@ -1,3 +1,16 @@
+/-
+This file was edited by Aristotle.
+
+Lean Toolchain version: leanprover/lean4:v4.20.0-rc5
+Mathlib version: d62eab0cc36ea522904895389c301cf8d844fd69 (May 9, 2025)
+
+The following was proved by Aristotle:
+
+- theorem cross_symm (a b : α × α) (ha : a.1 < a.2)
+    (hb : b.1 < b.2) (hdj : Disjoint ({a.1, a.2} : Finset α) ({b.1, b.2} : Finset α))
+    : (cross a b) = (cross b a)
+-/
+
 import Mathlib
 
 
@@ -316,7 +329,6 @@ def cross (a b : α × α) := (a.1 < b.1 ∧ b.1 < a.2) ^^ (a.1 < b.2 ∧ b.2 < 
 theorem cross_symm (a b : α × α) (ha : a.1 < a.2)
     (hb : b.1 < b.2) (hdj : Disjoint ({a.1, a.2} : Finset α) ({b.1, b.2} : Finset α))
     : (cross a b) = (cross b a) := by
-  -- Proof by Aristotle:
   unfold cross; aesop;
   cases lt_or_gt_of_ne left <;> cases lt_or_gt_of_ne right <;> simp_all +decide [ lt_asymm ];
   · -- By combining the inequalities, we can see that both directions hold.
