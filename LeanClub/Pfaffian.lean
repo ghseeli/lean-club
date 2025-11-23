@@ -301,8 +301,19 @@ theorem PerfectMatching.partner_invol_aristotle (M : PerfectMatching α) : M.par
   grind -ring
 -/
 
-def open_interval (p : α × α) := {x : α // p.1 < x ∧ x < p.2}
+def cross (a b : α × α) := (a.1 < b.1 ∧ b.1 < a.2) ^^ (a.1 < b.2 ∧ b.2 < a.2)
 
-#check open_interval (0, 3)
+#eval cross (0, 3) (1, 5)
 
-example : (3 : ℕ) ∈ open_interval ((1 : ℕ), (4 : ℕ)) := by
+#eval cross (0, 3) (1, 2)
+
+#eval cross (0, 3) (4, 6)
+
+#eval cross (1, 4) (2, 5)
+
+-- Crossing is a symmetric relation, at least for disjoint increasing pairs.
+
+theorem cross_symm (a b : α × α) (ha : a.1 < a.2)
+    (hb : b.1 < b.2) (hdj : Disjoint ({a.1, a.2} : Finset α) ({b.1, b.2} : Finset α))
+    : (cross a b) = (cross b a) := by
+  sorry
