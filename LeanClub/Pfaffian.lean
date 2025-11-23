@@ -316,11 +316,36 @@ def cross (a b : α × α) := (a.1 < b.1 ∧ b.1 < a.2) ^^ (a.1 < b.2 ∧ b.2 < 
 theorem cross_symm (a b : α × α) (ha : a.1 < a.2)
     (hb : b.1 < b.2) (hdj : Disjoint ({a.1, a.2} : Finset α) ({b.1, b.2} : Finset α))
     : (cross a b) = (cross b a) := by
-  -- Proof by Aristotle:
-  unfold cross; aesop;
-  cases lt_or_gt_of_ne left <;> cases lt_or_gt_of_ne right <;> simp_all +decide [ lt_asymm ];
-  · -- By combining the inequalities, we can see that both directions hold.
-    apply Iff.intro;
-    · exact fun _ => lt_trans ‹_› ‹_›;
-    · exact fun _ => lt_trans ha ‹_›;
-  · constructor <;> intro <;> cases lt_or_gt_of_ne left <;> cases lt_or_gt_of_ne right_1 <;> cases lt_or_gt_of_ne left_1 <;> cases lt_or_gt_of_ne right <;> aesop <;> exact lt_trans ‹_› ‹_›
+  have hdj2 : a.1 ≠ b.1 ∧ a.1 ≠ b.2 ∧ a.2 ≠ b.1 ∧ a.2 ≠ b.2 := by
+    simp_all only [disjoint_insert_right, mem_insert, mem_singleton, not_or, disjoint_singleton_right, ne_eq]
+    obtain ⟨fst, snd⟩ := a
+    obtain ⟨fst_1, snd_1⟩ := b
+    obtain ⟨left, right⟩ := hdj
+    obtain ⟨left, right_1⟩ := left
+    obtain ⟨left_1, right⟩ := right
+    simp_all only
+    apply And.intro
+    · intro a
+      subst a
+      simp_all only [not_true_eq_false]
+    · apply And.intro
+      · intro a
+        subst a
+        simp_all only [not_true_eq_false]
+      · apply And.intro
+        · intro a
+          subst a
+          simp_all only [not_true_eq_false]
+        · intro a
+          subst a
+          simp_all only [not_true_eq_false]
+  have h11 : a.1 < b.1 ∨ b.1 < a.1 := by
+    apply lt_or_gt_of_ne (hdj2.1)
+  have h12 : a.1 < b.2 ∨ b.2 < a.1 := by
+    apply lt_or_gt_of_ne (hdj2.2.1)
+  have h21 : a.2 < b.1 ∨ b.1 < a.2 := by
+    apply lt_or_gt_of_ne (hdj2.2.2.1)
+  have h22 : a.2 < b.2 ∨ b.2 < a.2 := by
+    apply lt_or_gt_of_ne (hdj2.2.2.2)
+  unfold cross
+  cases h11 <;> cases h12 <;> cases h21 <;> cases h22 <;> rename_i h h_1 h_2 h_3 <;> simp [h, h_1, h_2, h_3, not_lt_of_gt h, not_lt_of_gt h_1, not_lt_of_gt h_2, not_lt_of_gt h_3] <;> order
