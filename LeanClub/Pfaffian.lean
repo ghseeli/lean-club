@@ -1,6 +1,5 @@
 import Mathlib
 
-
 /-!
 # Pfaffian
 
@@ -27,22 +26,24 @@ variable {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α]
 
 variable {R : Type u} [CommRing R]
 
--- The alternatingness of a matrix.
+/-- A matrix is alternating if its diagonal entries are 0
+  and it is equal to the negative of its transpose. -/
 def IsAlt (A : Matrix α α R) :=
   (∀ i j, A j i = - (A i j)) ∧ (∀ i, A i i = 0)
 
--- Unclear if LT is the right thing
--- Switch LT to LinearOrder
-structure PerfectMatching (α : Type u) [Fintype α] [DecidableEq α] [LinearOrder α] where
-  edges : Finset (α × α)
-  ordered : ∀ b ∈ edges, b.1 < b.2
-  disjoint : ∀ b₁ ∈ edges, ∀ b₂ ∈ edges,
-    -- TODO Make this more elegant
-    -- switched to Disjoint {b₁.1, b₁.2} {b₂.1, b₂.2}
-    b₁ ≠ b₂ -> Disjoint ({b₁.1, b₁.2} : Finset α) ({b₂.1, b₂.2} : Finset α)
-    -- b₁.1 ≠ b₂.1 ∧ b₁.1 ≠ b₂.2 ∧ b₁.2 ≠ b₂.1 ∧ b₁.2 ≠ b₂.2
+/-- A perfect metching of a Fintype is a grouping of its elements into disjoint sets of size 2.
 
-  --union : ⋃ b ∈ edges, {b.1, b.2} = Set.univ := by decide
+    This structure implements the sets of size 2 as 2-tuples along with a linear ordering
+    because this linear order is necessary for computations involving Pfaffians. -/
+structure PerfectMatching (α : Type u) [Fintype α] [DecidableEq α] [LinearOrder α] where
+  /-- The edges (or blocks) are a collection of tuples with entries in α. -/
+  edges : Finset (α × α)
+  /-- The edges b are ordered so that b.1 < b.2. -/
+  ordered : ∀ b ∈ edges, b.1 < b.2
+  /-- The edges should be disjoint. -/
+  disjoint : ∀ b₁ ∈ edges, ∀ b₂ ∈ edges,
+    b₁ ≠ b₂ -> Disjoint ({b₁.1, b₁.2} : Finset α) ({b₂.1, b₂.2} : Finset α)
+  /-- Every element of α should be in some edge. -/
   union : ∀ (i : α), ∃ b ∈ edges, (i = b.1 ∨ i = b.2)
 
 -- The following are attempts at examples
@@ -64,15 +65,18 @@ open Finset
 
 -- 1b) If a perfect matching on S exists, then |S| is even.
 
+/-- The map that sends a 2-tuple to the set of its entries. -/
 def set {α} [Fintype α] [DecidableEq α] (b : α × α) : Finset α :=
   {b.1, b.2}
 
+/-- The set of elements in an edge of a PerfectMatching has cardinality 2. -/
 lemma block_card_two
     (M : PerfectMatching α) {b : α × α} (hb : b ∈ M.edges) :
     (set b).card = 2 := by
     have hne : b.1 ≠ b.2 := ne_of_lt (M.ordered b hb)
     simp [_root_.set, hne]
 
+/-- The union of all the edges in a PerfectMatching is the entirety of α. -/
 lemma blocks_cover (M : PerfectMatching α) :
     (M.edges.biUnion set : Finset α) = Finset.univ := by
   ext i; constructor
@@ -83,6 +87,11 @@ lemma blocks_cover (M : PerfectMatching α) :
     refine ⟨b, hb, ?_⟩
     rcases hi with rfl | rfl <;> simp [_root_.set]
 
+/-- The cardinality of the union of the edges of a PerfectMatching
+    is equal to the cardinality of α.
+
+    TODO: Use Finset.card_disjiUnion ?
+    -/
 lemma card_eq_sum_block_card (M : PerfectMatching α) :
     Fintype.card α = ∑ b ∈ M.edges, (set b).card := by
   -- cardinality of the union of blocks as a sum
@@ -93,6 +102,7 @@ lemma card_eq_sum_block_card (M : PerfectMatching α) :
           simp [blocks_cover M]
     _ = ∑ b ∈ M.edges, (set b).card := Finset.card_biUnion M.disjoint
 
+/-- If α has a PerfectMatching, then cardinality of α is 2 times the number of edges. -/
 theorem PerfectMatching.card_eq_twice_card_edges (M : PerfectMatching α) :
   Fintype.card α = 2 * M.edges.card :=
   calc Fintype.card α
@@ -104,12 +114,14 @@ theorem PerfectMatching.card_eq_twice_card_edges (M : PerfectMatching α) :
         -- sum of a constant over a finite set
     _ = 2 * M.edges.card := by simp [mul_comm]
 
+/-- If α has a PerfectMatching, then α has even cardinality. -/
 theorem PerfectMatching.card_even (M : PerfectMatching α) :
   Even (Fintype.card α) := by
     refine ⟨M.edges.card, ?_⟩
     rw [PerfectMatching.card_eq_twice_card_edges M]
     simp [two_mul]
 
+/-- If α has a PerfectMatching, then α has even cardinality. -/
 theorem even_card_of_exists_PerfectMatching
     (h : Nonempty (PerfectMatching α)) :
     Even (Fintype.card α) := by
@@ -121,8 +133,8 @@ example : Even (Fintype.card (Fin 4)) :=
 
 #check PerfectMatching.card_even pm_ex
 
--- In a perfect matching, each element of α lies in EXACTLY
--- one block.
+/-- In a perfect matching, each element of α lies in exactly
+  one block. -/
 theorem PerfectMatching.unique_block (M : PerfectMatching α) :
   ∀ (i : α), ∃! b ∈ M.edges, i ∈ set b := by
     intro i
@@ -146,7 +158,7 @@ theorem PerfectMatching.unique_block (M : PerfectMatching α) :
     have hdj : Disjoint {b.1, b.2} {y.1, y.2} := M.disjoint b hbedge y hyedge hneq
     contradiction
 
--- The edge (block) of M containing a given element
+/-- The edge (block) of M containing a given element. -/
 def PerfectMatching.block (M : PerfectMatching α) : α → α × α :=
   fun i => Finset.choose (fun (b : α × α) => (i ∈ set b))
                          (M.edges : Finset (α × α)) (PerfectMatching.unique_block M i)
@@ -163,10 +175,13 @@ def PerfectMatching.block (M : PerfectMatching α) : α → α × α :=
 
 #eval PerfectMatching.block pm_ex2 3
 
+/-- PerfectMatching.block M i gives an edge in M.edges and
+  i is in the set of elements in the edge. -/
 theorem PerfectMatching.block_spec (M : PerfectMatching α) (i : α) :
     (PerfectMatching.block M i ∈ M.edges) ∧ (i ∈ set (PerfectMatching.block M i)) :=
   choose_spec _ _ _
 
+/-- A given elements of α is in a unique edge of M. -/
 theorem PerfectMatching.block_uni (M : PerfectMatching α) (i : α) (b : α × α)
     (hbe : b ∈ M.edges) (hib : i ∈ set b)
     : b = PerfectMatching.block M i := by
@@ -175,6 +190,12 @@ theorem PerfectMatching.block_uni (M : PerfectMatching α) (i : α) (b : α × �
   · exact h2
   · exact (PerfectMatching.block_spec M i)
 
+/-- Given a pair, if i is an element of the pair, return the other element of the pair.
+
+  TODO: If this function is called on a pair that does not contain i, it always returns
+        the first element of the pair. Is this behavior desirable?
+        I would think this should either have a hypothesis that i is in the tuple or the
+        result should be an Option α. -/
 def first_or_second_if_not (pair : α × α) (i : α) := if pair.1 = i then pair.2 else pair.1
 
 #eval first_or_second_if_not (0, 2) 3
@@ -184,6 +205,8 @@ def first_or_second_if_not (pair : α × α) (i : α) := if pair.1 = i then pair
 #eval first_or_second_if_not (0, 2) 0
 
 -- The partner of a given element of α in M:
+/-- The partner map of a PerfectMatching M finds the unique block containing the input x
+  and returns the other element in its edge. -/
 def PerfectMatching.partner (M : PerfectMatching α) : α → α :=
   fun i => first_or_second_if_not (M.block i) i
 
@@ -195,6 +218,7 @@ def PerfectMatching.partner (M : PerfectMatching α) : α → α :=
 
 #eval pm_ex2.partner 2
 
+/-- The block containing i in a PerfectMatching M is equal to {i, M.partner i} as a set. -/
 theorem PerfectMatching.partner_block (M : PerfectMatching α) (i : α) :
     set (M.block i) = {i, M.partner i} := by
   rcases hiab : (M.block i) with ⟨a, b⟩
@@ -239,6 +263,10 @@ theorem PerfectMatching.partner_block_aristotle (M : PerfectMatching α) (i : α
     symm
     exact Or.resolve_left hi1 (Ne.symm hia)
 
+#leansearch "(a b c : α) (h : ({a, b} : Finset α) = {a, c}) : b = c?"
+/-- If {a,b} = {a,c}, then b = c.
+
+  TODO: Can this be replaced by Sym2.congr_right or, at least, proved using it?_-/
 lemma eq_of_two_sets_equal (a b c : α) (h : ({a, b} : Finset α) = {a, c}) : b = c := by
   have : b ∈ ({a, c} : Finset α) := by
     rw [← h]; apply mem_insert_of_mem
@@ -260,6 +288,7 @@ lemma eq_of_two_sets_equal (a b c : α) (h : ({a, b} : Finset α) = {a, c}) : b 
   case inr hb =>
     exact hb
 
+/-- Given a PerfectMatching M, elements i and M.partner i are in the same edge. -/
 theorem PerfectMatching.partner_same_block (M : PerfectMatching α) (i : α) :
     M.block i = M.block (M.partner i) := by
   apply PerfectMatching.block_uni
@@ -269,6 +298,7 @@ theorem PerfectMatching.partner_same_block (M : PerfectMatching α) (i : α) :
   rw [M.partner_block i]
   exact mem_insert_of_mem (mem_singleton.mpr rfl)
 
+/-- The PerfectMatching partner map is an involution. -/
 theorem PerfectMatching.partner_invol (M : PerfectMatching α) : M.partner ∘ M.partner = id := by
   ext i; simp
   apply eq_of_two_sets_equal (M.partner i)
@@ -301,6 +331,7 @@ theorem PerfectMatching.partner_invol_aristotle (M : PerfectMatching α) : M.par
   grind -ring
 -/
 
+/-- Two edges cross if one of the numbers of an edge is between the elements of the second. -/
 def cross (a b : α × α) := (a.1 < b.1 ∧ b.1 < a.2) ^^ (a.1 < b.2 ∧ b.2 < a.2)
 
 #eval cross (0, 3) (1, 5)
@@ -311,8 +342,8 @@ def cross (a b : α × α) := (a.1 < b.1 ∧ b.1 < a.2) ^^ (a.1 < b.2 ∧ b.2 < 
 
 #eval cross (1, 4) (2, 5)
 
--- Crossing is a symmetric relation, at least for disjoint increasing pairs.
-
+--
+/-- Crossing is a symmetric relation for disjoint increasing pairs. -/
 theorem cross_symm (a b : α × α) (ha : a.1 < a.2)
     (hb : b.1 < b.2) (hdj : Disjoint ({a.1, a.2} : Finset α) ({b.1, b.2} : Finset α))
     : (cross a b) = (cross b a) := by
@@ -351,6 +382,7 @@ theorem cross_symm (a b : α × α) (ha : a.1 < a.2)
 
 --- Crossing number of perfect matching
 
+/-- The crossing number of a perfect matching is the number of edges that cross. -/
 def PerfectMatching.crossingNumber (M : PerfectMatching α) : ℕ :=
   (M.edges.product M.edges).filter (fun x => (cross x.1 x.2) ∧ x.1.1 < x.2.1) |>.card
 
