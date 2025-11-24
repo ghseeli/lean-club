@@ -1,13 +1,5 @@
-# lean_club
+# ICERM Lean Club Fall 2025
 
-## GitHub configuration
+## Code in this repository
 
-To set up your new GitHub repository, follow these steps:
-
-* Under your repository name, click **Settings**.
-* In the **Actions** section of the sidebar, click "General".
-* Check the box **Allow GitHub Actions to create and approve pull requests**.
-* Click the **Pages** section of the settings sidebar.
-* In the **Source** dropdown menu, select "GitHub Actions".
-
-After following the steps above, you can remove this section from the README file.
+This repository contains the code members of the Lean Club at ICERM at the Fall 2025 semester program have written to implement known theorems about the [https://en.wikipedia.org/wiki/Pfaffian](Pfaffian) of a matrix.
