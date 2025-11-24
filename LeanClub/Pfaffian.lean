@@ -352,7 +352,7 @@ theorem cross_symm (a b : α × α) (ha : a.1 < a.2)
 --- Crossing number of perfect matching
 
 def PerfectMatching.crossingNumber (M : PerfectMatching α) : ℕ :=
-  (M.edges.product M.edges).filter (fun x => cross x.1 x.2) |>.card
+  (M.edges.product M.edges).filter (fun x => (cross x.1 x.2) ∧ x.1.1 < x.2.1) |>.card
 
 #eval PerfectMatching.crossingNumber pm_ex
 
