@@ -347,3 +347,13 @@ theorem cross_symm (a b : α × α) (ha : a.1 < a.2)
           simp [h11, h12, h21, h22, not_lt_of_gt h11,
             not_lt_of_gt h12, not_lt_of_gt h21, not_lt_of_gt h22]
               <;> order
+
+
+--- Crossing number of perfect matching
+
+def PerfectMatching.crossingNumber (M : PerfectMatching α) : ℕ :=
+  (M.edges.product M.edges).filter (fun x => cross x.1 x.2) |>.card
+
+#eval PerfectMatching.crossingNumber pm_ex
+
+#eval PerfectMatching.crossingNumber pm_ex2
