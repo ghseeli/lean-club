@@ -31,7 +31,7 @@ variable {R : Type u} [CommRing R]
 def IsAlt (A : Matrix α α R) :=
   (∀ i j, A j i = - (A i j)) ∧ (∀ i, A i i = 0)
 
-/-- A perfect metching of a Fintype is a grouping of its elements into disjoint sets of size 2.
+/-- A perfect matching of a Fintype is a grouping of its elements into disjoint sets of size 2.
 
     This structure implements the sets of size 2 as 2-tuples along with a linear ordering
     because this linear order is necessary for computations involving Pfaffians. -/
@@ -191,11 +191,7 @@ theorem PerfectMatching.block_uni (M : PerfectMatching α) (i : α) (b : α × �
   · exact (PerfectMatching.block_spec M i)
 
 /-- Given a pair, if i is an element of the pair, return the other element of the pair.
-
-  TODO: If this function is called on a pair that does not contain i, it always returns
-        the first element of the pair. Is this behavior desirable?
-        I would think this should either have a hypothesis that i is in the tuple or the
-        result should be an Option α. -/
+If this function is called on a pair that does not contain i, it always returns the first element of the pair. This makes it a total function and saves us the trouble of dealing with certificates. -/
 def first_or_second_if_not (pair : α × α) (i : α) := if pair.1 = i then pair.2 else pair.1
 
 #eval first_or_second_if_not (0, 2) 3
