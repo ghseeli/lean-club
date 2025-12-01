@@ -34,6 +34,7 @@ def IsAlt (A : Matrix α α R) :=
 def IsAntiSymm (A : Matrix α α R) :=
   (∀ i j, A j i = - (A i j))
 
+omit [Fintype α] [DecidableEq α] [LinearOrder α] in
 theorem AntiSymm_char_not_2_IsAlt (A : Matrix α α R) (h : IsRegular (2 : R))
      (h' : IsAntiSymm A) : IsAlt A := by
   simp only [IsAntiSymm] at h'
@@ -44,7 +45,6 @@ theorem AntiSymm_char_not_2_IsAlt (A : Matrix α α R) (h : IsRegular (2 : R))
     calc _ = - A i i + A i i := by nth_rw 1 [h' i i]
     _ = 0 := by simp
   rw [←two_mul] at this
-  --rw [isRegular_iff, isLeftRegular_iff_right_eq_zero_of_mul] at h
   rw [isRegular_iff_eq_zero_of_mul] at h
   rcases h with ⟨leftreg, _⟩
   apply leftreg (A i i) this
