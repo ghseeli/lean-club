@@ -49,7 +49,7 @@ theorem AntiSymm_char_not_2_IsAlt (A : Matrix α α R) (h : IsRegular (2 : R))
   rcases h with ⟨leftreg, _⟩
   apply leftreg (A i i) this
 
-/-- A perfect metching of a Fintype is a grouping of its elements into disjoint sets of size 2.
+/-- A perfect matching of a Fintype is a grouping of its elements into disjoint sets of size 2.
 
     This structure implements the sets of size 2 as 2-tuples along with a linear ordering
     because this linear order is necessary for computations involving Pfaffians. -/
